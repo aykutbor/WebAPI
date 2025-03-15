@@ -1,0 +1,57 @@
+@page
+@model WebCrawlerUI.Pages.LatestModel
+@{
+    ViewData["Title"] = "Latest Crawled Pages";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">Latest Crawled Pages</h1>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-info" role="alert">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    @if (Model.LatestPages.Any())
+    {
+        <div class="row">
+            @foreach (var item in Model.LatestPages)
+            {
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">@item.Title</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">
+                                <a href="@item.Url" target="_blank">@item.Url</a>
+                            </h6>
+                            <p class="card-text">
+                                @(item.Content.Length > 200 
+                                    ? item.Content.Substring(0, 200) + "..." 
+                                    : item.Content)
+                            </p>
+                        </div>
+                        <div class="card-footer text-muted">
+                            Crawled on @item.CrawledAt.ToString("yyyy-MM-dd HH:mm:ss")
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else if (string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-info" role="alert">
+            Loading latest pages...
+        </div>
+    }
+
+    <div class="text-center mt-4">
+        <a asp-page="/Index" class="btn btn-primary">
+            <i class="fas fa-home me-2"></i>Back to Home
+        </a>
+    </div>
+</div> 
