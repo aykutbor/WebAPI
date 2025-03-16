@@ -13,9 +13,7 @@ namespace WebCrawlerUI.Services
         {
             //string apiBaseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5000/api/crawl";
             string apiBaseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://host.docker.internal:5001/api/crawl";
-            _client = new RestClient(apiBaseUrl);
-
-            
+            _client = new RestClient(apiBaseUrl);           
         }
 
         public async Task<WebData?> CrawlAsync(string url)
@@ -30,7 +28,7 @@ namespace WebCrawlerUI.Services
                 .AddHeader("Content-Type", "application/json")
                 .AddJsonBody(new { url });
 
-            RestResponse? response = null; // <-- response kapsamý geniþletildi
+            RestResponse? response = null; 
 
             try
             {
@@ -72,7 +70,7 @@ namespace WebCrawlerUI.Services
                 {
                     error = "JSON deserialization error",
                     message = ex.Message,
-                    content = response?.Content ?? "No content" // <-- response burada kullanýlabilir hale geldi
+                    content = response?.Content ?? "No content" 
                 }));
                 return null;
             }
@@ -86,7 +84,6 @@ namespace WebCrawlerUI.Services
                 return null;
             }
         }
-
 
         public async Task<List<WebData>> SearchAsync(string query)
         {
@@ -104,7 +101,6 @@ namespace WebCrawlerUI.Services
             }
             catch (Exception ex)
             {
-                // Log the exception
                 Console.WriteLine($"Error in SearchAsync: {ex.Message}");
                 return new List<WebData>();
             }
@@ -126,7 +122,6 @@ namespace WebCrawlerUI.Services
             }
             catch (Exception ex)
             {
-                // Log the exception
                 Console.WriteLine($"Error in GetLatestAsync: {ex.Message}");
                 return new List<WebData>();
             }

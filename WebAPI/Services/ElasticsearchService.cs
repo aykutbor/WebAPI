@@ -14,7 +14,6 @@ namespace WebAPI.Services
             
             _client = new ElasticClient(settings);
             
-            // Create index if it doesn't exist
             if (!_client.Indices.Exists("webdata").Exists)
             {
                 var createIndexResponse = _client.Indices.Create("webdata", c => c
