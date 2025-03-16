@@ -1,5 +1,6 @@
 using RestSharp;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using WebCrawlerUI.Models;
 
 namespace WebCrawlerUI.Services
@@ -19,22 +20,69 @@ namespace WebCrawlerUI.Services
 
         public async Task<WebData?> CrawlAsync(string url)
         {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                Console.WriteLine("{\"error\": \"URL cannot be null or empty.\"}");
+                return null;
+            }
+
+            var request = new RestRequest("", Method.Post)
+                .AddHeader("Content-Type", "application/json")
+                .AddJsonBody(new { url });
+
+            RestResponse? response = null; // <-- response kapsamý geniþletildi
+
             try
             {
-                var request = new RestRequest("", Method.Post);
-                request.AddJsonBody(new { url }); // JSON formatýnda bir nesne gönderiyoruz
-                var response = await _client.ExecuteAsync(request);
+                response = await _client.ExecuteAsync(request);
+
                 if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
                 {
-                    return JsonSerializer.Deserialize<WebData>(response.Content);
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                    };
+
+                    return JsonSerializer.Deserialize<WebData>(response.Content, options);
                 }
-                // Hata durumunda yanýtý kontrol edin
-                Console.WriteLine($"Error: {response.StatusCode}, Content: {response.Content}");
+
+                Console.WriteLine(JsonSerializer.Serialize(new
+                {
+                    error = "CrawlAsync failed",
+                    statusCode = response.StatusCode,
+                    content = response.Content ?? "No content"
+                }));
+
+                return null;
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(new
+                {
+                    error = "HTTP request error",
+                    message = ex.Message,
+                    url
+                }));
+                return null;
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(new
+                {
+                    error = "JSON deserialization error",
+                    message = ex.Message,
+                    content = response?.Content ?? "No content" // <-- response burada kullanýlabilir hale geldi
+                }));
                 return null;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in CrawlAsync: {ex.Message}");
+                Console.WriteLine(JsonSerializer.Serialize(new
+                {
+                    error = "Unexpected error",
+                    message = ex.Message
+                }));
                 return null;
             }
         }
@@ -46,12 +94,12 @@ namespace WebCrawlerUI.Services
             {
                 var request = new RestRequest($"search?query={query}", Method.Get);
                 var response = await _client.ExecuteAsync(request);
-                
+
                 if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
                 {
                     return JsonSerializer.Deserialize<List<WebData>>(response.Content) ?? new List<WebData>();
                 }
-                
+
                 return new List<WebData>();
             }
             catch (Exception ex)

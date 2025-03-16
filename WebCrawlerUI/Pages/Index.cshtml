@@ -25,7 +25,6 @@
                         <div class="mb-3">
                             <label asp-for="UrlToCrawl" class="form-label">URL</label>
                             <input asp-for="UrlToCrawl" class="form-control" placeholder="https://example.com" required />
-                            <div class="form-text">Try simple sites like example.com or httpbin.org/html first</div>
                         </div>
                         <button type="submit" class="btn btn-primary">Crawl</button>
                     </form>
@@ -60,57 +59,96 @@
             <div class="card-body">
                 <h4>@Model.CrawledData.Title</h4>
                 <p><strong>URL:</strong> <a href="@Model.CrawledData.Url" target="_blank">@Model.CrawledData.Url</a></p>
-                <p><strong>Crawled At:</strong> @Model.CrawledData.CrawledAt.ToString("yyyy-MM-dd HH:mm:ss")</p>
+                <p><strong>Crawled At:</strong> @Model.CrawledData.CrawledAt.ToString("o")</p>
+
                 <div class="mt-3">
-                    <h5>Content: <span class="badge bg-secondary">@(Model.CrawledData.Content?.Length ?? 0) characters</span></h5>
-                    <div class="border p-3 bg-light">
-                        @if (string.IsNullOrEmpty(Model.CrawledData.Content))
+                    @if (string.IsNullOrWhiteSpace(Model.CrawledData.Content))
+                    {
+                        <p class="text-muted">No content was extracted from this URL. Please ensure the data format is correct or check the console logs for details.</p>
+                    }
+                    else
+                    {
+                        string[] newsItems = Model.CrawledData.Content.Split(new[] { "||" }, StringSplitOptions.RemoveEmptyEntries);
+
+                        if (newsItems.Length == 0)
                         {
-                            <p class="text-muted">No content was extracted from this URL. Try a different website or check the console logs.</p>
+                            <p class="text-muted">No news items found in the content. Please check the content format.</p>
                         }
                         else
                         {
-                            @* Calculate display content *@
-                            string displayContent = "";
-                            string wordLimitedContent = "";
-                            int wordCount = 0;
-                            @if (Model.CrawledData.Content.Length > 100)
+                            // İlk haber kutusu
+                            string[] parts = newsItems[0].Split('|');
+                            string headline = parts.Length > 0 ? parts[0].Trim() : "No Title";
+                            string content = parts.Length > 1 ? parts[1].Trim() : Model.CrawledData.Content;
+
+                            string shortHeadline = headline.Length > 60 ? headline.Substring(0, 60) + "..." : headline;
+
+                            string[] words = content.Split(' ');
+                            string shortContent = string.Join(" ", words.Take(30)); // İlk 30 kelimeyi al
+                            if (words.Length > 30)
                             {
-                                displayContent = Model.CrawledData.Content.Substring(0, 100) + "...";
+                                shortContent += "...";
                             }
-                            else
-                            {
-                                displayContent = Model.CrawledData.Content;
-                            }
-                            @* Calculate word limited content *@
-                            string[] words = Model.CrawledData.Content.Split(' ');
-                            wordCount = words.Length;
-                            @if (words.Length > 15)
-                            {
-                                wordLimitedContent = string.Join(" ", words.Take(15)) + "...";
-                            }
-                            else
-                            {
-                                wordLimitedContent = Model.CrawledData.Content;
-                            }
-                            <div>
-                                <strong>Character limited (100):</strong>
-                                <p>@displayContent</p>
+
+                            <div class="mb-4 p-4 border rounded bg-light">
+                                <h5 class="text-primary font-weight-bold" style="font-size: 1.25rem;">@shortHeadline</h5>
+                                <p class="text-muted" style="font-size: 1rem; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap;">@shortContent</p>
+                                <a href="@Model.CrawledData.Url" class="btn btn-info btn-sm" target="_blank">Read more</a>
                             </div>
-                            <div>
-                                <strong>Word limited (15):</strong>
-                                <p>@wordLimitedContent</p>
-                            </div>
-                            <p class="text-muted">
-                                Content length: @Model.CrawledData.Content.Length characters,
-                                Word count: @wordCount words
-                            </p>
+
+                            // İkinci haber kutusu
+                            if (newsItems.Length > 1)
+                            {
+                                parts = newsItems[1].Split('|');
+                                headline = parts.Length > 0 ? parts[0].Trim() : "No Title";
+                                content = parts.Length > 1 ? parts[1].Trim() : Model.CrawledData.Content;
+
+                                shortHeadline = headline.Length > 60 ? headline.Substring(0, 60) + "..." : headline;
+
+                                words = content.Split(' ');
+                                shortContent = string.Join(" ", words.Take(30)); // İlk 30 kelimeyi al
+                                if (words.Length > 30)
+                                {
+                                    shortContent += "...";
+                                }
+
+                                <div class="mt-3 mb-4 p-4 border rounded bg-light">
+                                    <h5 class="text-primary font-weight-bold" style="font-size: 1.25rem;">@shortHeadline</h5>
+                                    <p class="text-muted" style="font-size: 1rem; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap;">@shortContent</p>
+                                    <a href="@Model.CrawledData.Url" class="btn btn-info btn-sm" target="_blank">Read more</a>
+                                </div>
+                            }
+
+                            // Üçüncü haber kutusu (yeni eklenen)
+                            if (newsItems.Length > 2)
+                            {
+                                parts = newsItems[2].Split('|');
+                                headline = parts.Length > 0 ? parts[0].Trim() : "No Title";
+                                content = parts.Length > 1 ? parts[1].Trim() : Model.CrawledData.Content;
+
+                                shortHeadline = headline.Length > 60 ? headline.Substring(0, 60) + "..." : headline;
+
+                                words = content.Split(' ');
+                                shortContent = string.Join(" ", words.Take(30)); // İlk 30 kelimeyi al
+                                if (words.Length > 30)
+                                {
+                                    shortContent += "...";
+                                }
+
+                                <div class="mt-3 mb-4 p-4 border rounded bg-light">
+                                    <h5 class="text-primary font-weight-bold" style="font-size: 1.25rem;">@shortHeadline</h5>
+                                    <p class="text-muted" style="font-size: 1rem; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap;">@shortContent</p>
+                                    <a href="@Model.CrawledData.Url" class="btn btn-info btn-sm" target="_blank">Read more</a>
+                                </div>
+                            }
                         }
-                    </div>
+                    }
                 </div>
             </div>
         </div>
     }
+
+
 
     @if (Model.SearchResults.Any())
     {

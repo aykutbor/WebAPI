@@ -48,6 +48,7 @@ namespace WebAPI.Controllers
             return Ok(results);
         }
 
+
         [HttpGet("latest")]
         public IActionResult GetLatest([FromQuery] int take = 10)
         {
