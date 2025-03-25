@@ -28,11 +28,17 @@
                             <h6 class="card-subtitle mb-2 text-muted">
                                 <a href="@item.Url" target="_blank">@item.Url</a>
                             </h6>
-                            <p class="card-text">
-                                @(item.Content.Length > 200 
-                                    ? item.Content.Substring(0, 200) + "..." 
-                                    : item.Content)
-                            </p>
+                            <div class="card-text">
+                                @if (string.IsNullOrEmpty(item.Content))
+                                {
+                                    <span class="text-muted">No content available</span>
+                                }
+                                else
+                                {
+            <pre style="white-space: pre-wrap; word-break: break-word; max-height: 150px; overflow-y: auto;">@(item.Content.Length > 250 ? item.Content.Substring(0, 250) + "..." : item.Content)</pre>
+                                    <span class="badge bg-secondary">@item.Content.Length chars</span>
+                                }
+                            </div>
                         </div>
                         <div class="card-footer text-muted">
                             Crawled on @item.CrawledAt.ToString("yyyy-MM-dd HH:mm:ss")
@@ -54,4 +60,4 @@
             <i class="fas fa-home me-2"></i>Back to Home
         </a>
     </div>
-</div> 
+</div>

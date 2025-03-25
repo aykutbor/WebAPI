@@ -92,18 +92,25 @@ namespace WebCrawlerUI.Services
                 var request = new RestRequest($"search?query={query}", Method.Get);
                 var response = await _client.ExecuteAsync(request);
 
+                Console.WriteLine($"Search Response: Status={response.StatusCode}, Content={response.Content?.Substring(0, Math.Min(100, response.Content?.Length ?? 0))}...");
+
                 if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
                 {
-                    Console.WriteLine($"Search Response JSON: {response.Content}");
                     var options = new JsonSerializerOptions
                     {
-                        PropertyNameCaseInsensitive = true
+                        PropertyNameCaseInsensitive = true,
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                     };
                     var results = JsonSerializer.Deserialize<List<WebData>>(response.Content, options) ?? new List<WebData>();
                     // Log each result to help debug
                     foreach (var result in results)
                     {
-                        Console.WriteLine($"Result: Id={result.Id}, Title={result.Title}, Content Length={result.Content?.Length ?? 0}");
+                        Console.WriteLine($"Search Result: Id={result.Id}, Title={result.Title}, Url={result.Url}, Content Length={result.Content?.Length ?? 0}");
+                        // Ensure content is not null
+                        if (result.Content == null)
+                        {
+                            result.Content = "";
+                        }
                     }
                     return results;
                 }
@@ -125,11 +132,34 @@ namespace WebCrawlerUI.Services
         {
             try
             {
-                var request = new RestRequest($"latest?take={take}", Method.Get);
+                // Ensure we're hitting the correct endpoint
+                var request = new RestRequest("latest", Method.Get)
+                    .AddQueryParameter("take", take.ToString());
                 var response = await _client.ExecuteAsync(request);
+                Console.WriteLine($"Latest Response: Status={response.StatusCode}, Content={response.Content?.Substring(0, Math.Min(100, response.Content?.Length ?? 0))}...");
                 if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
                 {
-                    return JsonSerializer.Deserialize<List<WebData>>(response.Content) ?? new List<WebData>();
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                    };
+                    var results = JsonSerializer.Deserialize<List<WebData>>(response.Content, options) ?? new List<WebData>();
+                    // Log each result to help debug
+                    foreach (var result in results)
+                    {
+                        Console.WriteLine($"Latest Result: Id={result.Id}, Title={result.Title}, Url={result.Url}, Content Length={result.Content?.Length ?? 0}");
+                        // Ensure content is not null
+                        if (result.Content == null)
+                        {
+                            result.Content = "";
+                        }
+                    }
+                    return results;
+                }
+                else
+                {
+                    Console.WriteLine($"Latest failed: Status={response.StatusCode}, Content={response.Content ?? "No content"}");
                 }
                 return new List<WebData>();
             }

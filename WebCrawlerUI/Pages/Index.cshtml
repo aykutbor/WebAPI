@@ -129,7 +129,7 @@
                                 }
                                 else
                                 {
-            <pre style="white-space: pre-wrap; word-break: break-word;">@(result.Content.Length > 250 ? result.Content.Substring(0, 250) + "..." : result.Content)</pre>
+            <pre style="white-space: pre-wrap; word-break: break-word; max-height: 150px; overflow-y: auto;">@(result.Content.Length > 250 ? result.Content.Substring(0, 250) + "..." : result.Content)</pre>
                                     <span class="badge bg-secondary">@result.Content.Length chars</span>
                                 }
                             </div>

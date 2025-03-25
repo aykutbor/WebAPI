@@ -23,7 +23,13 @@ namespace WebCrawlerUI.Pages
         {
             try
             {
+                _logger.LogInformation("Retrieving latest pages...");
                 LatestPages = await _apiService.GetLatestAsync();
+                _logger.LogInformation($"Retrieved {LatestPages.Count} latest pages");
+                foreach (var page in LatestPages)
+                {
+                    _logger.LogInformation($"Latest Page: Id={page.Id}, Title={page.Title}, URL={page.Url}, Content Length={page.Content?.Length ?? 0}");
+                }
                 if (LatestPages.Count == 0)
                 {
                     ErrorMessage = "No crawled pages found. Try crawling some pages first.";
@@ -34,8 +40,7 @@ namespace WebCrawlerUI.Pages
                 _logger.LogError(ex, "Error retrieving latest pages");
                 ErrorMessage = $"Error retrieving latest pages: {ex.Message}";
             }
-            
             return Page();
         }
     }
-} 
+}
