@@ -13,7 +13,7 @@ namespace WebCrawlerUI.Services
         {
             //string apiBaseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5000/api/crawl";
             string apiBaseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://host.docker.internal:5001/api/crawl";
-            _client = new RestClient(apiBaseUrl);           
+            _client = new RestClient(apiBaseUrl);
         }
 
         public async Task<WebData?> CrawlAsync(string url)
@@ -28,7 +28,7 @@ namespace WebCrawlerUI.Services
                 .AddHeader("Content-Type", "application/json")
                 .AddJsonBody(new { url });
 
-            RestResponse? response = null; 
+            RestResponse? response = null;
 
             try
             {
@@ -70,7 +70,7 @@ namespace WebCrawlerUI.Services
                 {
                     error = "JSON deserialization error",
                     message = ex.Message,
-                    content = response?.Content ?? "No content" 
+                    content = response?.Content ?? "No content"
                 }));
                 return null;
             }
@@ -94,7 +94,22 @@ namespace WebCrawlerUI.Services
 
                 if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
                 {
-                    return JsonSerializer.Deserialize<List<WebData>>(response.Content) ?? new List<WebData>();
+                    Console.WriteLine($"Search Response JSON: {response.Content}");
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    var results = JsonSerializer.Deserialize<List<WebData>>(response.Content, options) ?? new List<WebData>();
+                    // Log each result to help debug
+                    foreach (var result in results)
+                    {
+                        Console.WriteLine($"Result: Id={result.Id}, Title={result.Title}, Content Length={result.Content?.Length ?? 0}");
+                    }
+                    return results;
+                }
+                else
+                {
+                    Console.WriteLine($"Search failed: Status={response.StatusCode}, Content={response.Content ?? "No content"}");
                 }
 
                 return new List<WebData>();
@@ -112,12 +127,10 @@ namespace WebCrawlerUI.Services
             {
                 var request = new RestRequest($"latest?take={take}", Method.Get);
                 var response = await _client.ExecuteAsync(request);
-                
                 if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
                 {
                     return JsonSerializer.Deserialize<List<WebData>>(response.Content) ?? new List<WebData>();
                 }
-                
                 return new List<WebData>();
             }
             catch (Exception ex)
@@ -127,4 +140,4 @@ namespace WebCrawlerUI.Services
             }
         }
     }
-} 
+}

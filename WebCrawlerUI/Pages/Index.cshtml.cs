@@ -18,10 +18,8 @@ public class IndexModel : PageModel
 
     [BindProperty]
     public string UrlToCrawl { get; set; } = string.Empty;
-    
     [BindProperty(SupportsGet = true)]
     public string Query { get; set; } = string.Empty;
-    
     public WebData? CrawledData { get; set; }
     public List<WebData> SearchResults { get; set; } = new List<WebData>();
     public string ErrorMessage { get; set; } = string.Empty;
@@ -33,6 +31,12 @@ public class IndexModel : PageModel
             try
             {
                 SearchResults = await _apiService.SearchAsync(Query);
+                // Add debug logging
+                _logger.LogInformation($"Search for '{Query}' returned {SearchResults.Count} results");
+                foreach (var result in SearchResults)
+                {
+                    _logger.LogInformation($"Result: Id={result.Id}, Title={result.Title?.Length ?? 0}, Content Length={result.Content?.Length ?? 0}");
+                }
                 if (SearchResults.Count == 0)
                 {
                     ErrorMessage = "No results found for your search query.";
@@ -44,7 +48,6 @@ public class IndexModel : PageModel
                 ErrorMessage = $"Error searching: {ex.Message}";
             }
         }
-        
         return Page();
     }
 
@@ -69,7 +72,6 @@ public class IndexModel : PageModel
             _logger.LogError(ex, "Error crawling {Url}", UrlToCrawl);
             ErrorMessage = $"Error crawling: {ex.Message}";
         }
-        
         return Page();
     }
 }

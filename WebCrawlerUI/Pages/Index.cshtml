@@ -122,26 +122,17 @@
                             <h6 class="card-subtitle mb-2 text-muted">
                                 <a href="@result.Url" target="_blank">@result.Url</a>
                             </h6>
-                            <p class="card-text">
+                            <div class="card-text">
                                 @if (string.IsNullOrEmpty(result.Content))
                                 {
                                     <span class="text-muted">No content available</span>
                                 }
                                 else
                                 {
-                                    string displayResultContent = "";
-                                    @if (result.Content.Length > 100)
-                                    {
-                                        displayResultContent = result.Content.Substring(0, 100) + "...";
-                                    }
-                                    else
-                                    {
-                                        displayResultContent = result.Content;
-                                    }
-                                <p>@displayResultContent</p>
-                                <span class="badge bg-secondary">@result.Content.Length chars</span>
+            <pre style="white-space: pre-wrap; word-break: break-word;">@(result.Content.Length > 250 ? result.Content.Substring(0, 250) + "..." : result.Content)</pre>
+                                    <span class="badge bg-secondary">@result.Content.Length chars</span>
                                 }
-                            </p>
+                            </div>
                             <div class="text-muted small">
                                 Crawled on @result.CrawledAt.ToString("yyyy-MM-dd HH:mm:ss")
                             </div>
