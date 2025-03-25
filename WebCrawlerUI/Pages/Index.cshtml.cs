@@ -31,7 +31,7 @@ public class IndexModel : PageModel
             try
             {
                 SearchResults = await _apiService.SearchAsync(Query);
-                // Add debug logging
+                
                 _logger.LogInformation($"Search for '{Query}' returned {SearchResults.Count} results");
                 foreach (var result in SearchResults)
                 {

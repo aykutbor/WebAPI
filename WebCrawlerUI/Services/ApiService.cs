@@ -102,11 +102,11 @@ namespace WebCrawlerUI.Services
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                     };
                     var results = JsonSerializer.Deserialize<List<WebData>>(response.Content, options) ?? new List<WebData>();
-                    // Log each result to help debug
+                    
                     foreach (var result in results)
                     {
                         Console.WriteLine($"Search Result: Id={result.Id}, Title={result.Title}, Url={result.Url}, Content Length={result.Content?.Length ?? 0}");
-                        // Ensure content is not null
+                        
                         if (result.Content == null)
                         {
                             result.Content = "";
@@ -132,7 +132,6 @@ namespace WebCrawlerUI.Services
         {
             try
             {
-                // Ensure we're hitting the correct endpoint
                 var request = new RestRequest("latest", Method.Get)
                     .AddQueryParameter("take", take.ToString());
                 var response = await _client.ExecuteAsync(request);
@@ -145,7 +144,7 @@ namespace WebCrawlerUI.Services
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                     };
                     var results = JsonSerializer.Deserialize<List<WebData>>(response.Content, options) ?? new List<WebData>();
-                    // Log each result to help debug
+                    
                     foreach (var result in results)
                     {
                         Console.WriteLine($"Latest Result: Id={result.Id}, Title={result.Title}, Url={result.Url}, Content Length={result.Content?.Length ?? 0}");
