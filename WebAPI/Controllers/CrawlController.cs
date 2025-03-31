@@ -25,15 +25,28 @@ namespace WebAPI.Controllers
                 return BadRequest("URL cannot be empty");
             }
 
-            var data = _scraper.Scrape(request.Url);
-            var success = _elasticsearch.IndexDocument(data);
+            var dataList = _scraper.Scrape(request.Url);
+            var successCount = 0;
 
-            if (!success)
+            foreach (var data in dataList)
             {
-                return StatusCode(500, "Failed to index document in Elasticsearch");
+                if (_elasticsearch.IndexDocument(data))
+                {
+                    successCount++;
+                }
             }
 
-            return Ok(data);
+            if (successCount == 0 && dataList.Count > 0)
+            {
+                return StatusCode(500, "Failed to index any documents in Elasticsearch");
+            }
+
+            return Ok(new
+            {
+                TotalArticles = dataList.Count,
+                SuccessfullyIndexed = successCount,
+                Articles = dataList
+            });
         }
 
         [HttpGet("search")]
@@ -56,4 +69,4 @@ namespace WebAPI.Controllers
             return Ok(results);
         }
     }
-} 
+}
