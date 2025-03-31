@@ -128,11 +128,14 @@ namespace WebAPI.Services
 
                                 if (contentBuilder.Length > 0 && !string.IsNullOrWhiteSpace(title) && title != "News Article")
                                 {
+                                    // Format the content as expected by the UI (headline|content format)
+                                    string formattedContent = $"{title}|{contentBuilder.ToString().Replace(Environment.NewLine, " ")}";
+
                                     articles.Add(new WebData
                                     {
                                         Url = articleUrl,
                                         Title = title,
-                                        Content = CleanContent(contentBuilder.ToString()),
+                                        Content = formattedContent,
                                         CrawledAt = timestamp
                                     });
                                     Console.WriteLine($"Added article: {title}");
@@ -195,11 +198,14 @@ namespace WebAPI.Services
 
                                     if (contentBuilder.Length > 0 && !string.IsNullOrWhiteSpace(title) && title != "Article")
                                     {
+                                        // Format the content as expected by the UI (headline|content format)
+                                        string formattedContent = $"{title}|{contentBuilder.ToString().Replace(Environment.NewLine, " ")}";
+
                                         articles.Add(new WebData
                                         {
                                             Url = articleUrl,
                                             Title = title,
-                                            Content = CleanContent(contentBuilder.ToString()),
+                                            Content = formattedContent,
                                             CrawledAt = timestamp
                                         });
                                         Console.WriteLine($"Added alternative article: {title}");
@@ -240,11 +246,14 @@ namespace WebAPI.Services
                                                 articleUrl = $"https://www.sozcu.com.tr{articleUrl}";
                                             }
 
+                                            // Format the content as expected by the UI (headline|content format)
+                                            string formattedContent = $"{linkText}|{linkText}";
+
                                             articles.Add(new WebData
                                             {
                                                 Url = articleUrl,
                                                 Title = linkText,
-                                                Content = linkText,
+                                                Content = formattedContent,
                                                 CrawledAt = timestamp
                                             });
                                             Console.WriteLine($"Added last resort article: {linkText}");
@@ -298,15 +307,44 @@ namespace WebAPI.Services
 
                     string content = CleanContent(contentBuilder.ToString());
 
+                    // Format the content as expected by the UI (headline|content format)
+                    string formattedContent = $"{pageTitle}|{content}";
+
                     articles.Add(new WebData
                     {
                         Url = url,
                         Title = pageTitle,
-                        Content = content,
+                        Content = formattedContent,
                         CrawledAt = timestamp
                     });
 
                     Console.WriteLine($"Added page as a single article with {elementsFound} elements");
+                }
+
+                // Combine all articles into a single formatted string using "||" as a separator
+                if (articles.Count > 1)
+                {
+                    var combinedArticleContents = new StringBuilder();
+                    foreach (var article in articles)
+                    {
+                        if (combinedArticleContents.Length > 0)
+                        {
+                            combinedArticleContents.Append("||");
+                        }
+                        combinedArticleContents.Append(article.Content);
+                    }
+
+                    // Return a single WebData object with all articles combined
+                    return new List<WebData>
+                    {
+                        new WebData
+                        {
+                            Url = url,
+                            Title = pageTitle,
+                            Content = combinedArticleContents.ToString(),
+                            CrawledAt = timestamp
+                        }
+                    };
                 }
 
                 Console.WriteLine($"Total articles extracted: {articles.Count}");

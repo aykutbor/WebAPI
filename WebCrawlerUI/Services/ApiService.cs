@@ -33,6 +33,7 @@ namespace WebCrawlerUI.Services
             try
             {
                 response = await _client.ExecuteAsync(request);
+                Console.WriteLine($"Crawl Response: Status={response.StatusCode}, Content Length={response.Content?.Length ?? 0}");
 
                 if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
                 {
@@ -42,14 +43,45 @@ namespace WebCrawlerUI.Services
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                     };
 
-                    return JsonSerializer.Deserialize<WebData>(response.Content, options);
+                    try
+                    {
+                        // First try to parse as a complete response object with Articles array
+                        var apiResponse = JsonSerializer.Deserialize<CrawlResponse>(response.Content, options);
+
+                        if (apiResponse != null && apiResponse.Articles != null && apiResponse.Articles.Count > 0)
+                        {
+                            // Take the first article or combine them if needed
+                            var firstArticle = apiResponse.Articles[0];
+                            Console.WriteLine($"Successfully parsed API response with {apiResponse.Articles.Count} articles");
+
+                            return firstArticle;
+                        }
+                    }
+                    catch (JsonException)
+                    {
+                        // If that fails, try to parse as a single WebData object
+                        Console.WriteLine("Could not parse as CrawlResponse, trying as WebData");
+                        try
+                        {
+                            var webData = JsonSerializer.Deserialize<WebData>(response.Content, options);
+                            if (webData != null)
+                            {
+                                Console.WriteLine($"Successfully parsed as single WebData: Title={webData.Title}, Content Length={webData.Content?.Length ?? 0}");
+                                return webData;
+                            }
+                        }
+                        catch (JsonException ex)
+                        {
+                            Console.WriteLine($"Error parsing as WebData: {ex.Message}");
+                        }
+                    }
                 }
 
                 Console.WriteLine(JsonSerializer.Serialize(new
                 {
                     error = "CrawlAsync failed",
                     statusCode = response.StatusCode,
-                    content = response.Content ?? "No content"
+                    content = response.Content?.Substring(0, Math.Min(100, response.Content?.Length ?? 0)) ?? "No content"
                 }));
 
                 return null;
@@ -64,22 +96,13 @@ namespace WebCrawlerUI.Services
                 }));
                 return null;
             }
-            catch (JsonException ex)
-            {
-                Console.WriteLine(JsonSerializer.Serialize(new
-                {
-                    error = "JSON deserialization error",
-                    message = ex.Message,
-                    content = response?.Content ?? "No content"
-                }));
-                return null;
-            }
             catch (Exception ex)
             {
                 Console.WriteLine(JsonSerializer.Serialize(new
                 {
                     error = "Unexpected error",
-                    message = ex.Message
+                    message = ex.Message,
+                    content = response?.Content?.Substring(0, Math.Min(100, response?.Content?.Length ?? 0)) ?? "No content"
                 }));
                 return null;
             }
@@ -102,11 +125,11 @@ namespace WebCrawlerUI.Services
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                     };
                     var results = JsonSerializer.Deserialize<List<WebData>>(response.Content, options) ?? new List<WebData>();
-                    
+
                     foreach (var result in results)
                     {
                         Console.WriteLine($"Search Result: Id={result.Id}, Title={result.Title}, Url={result.Url}, Content Length={result.Content?.Length ?? 0}");
-                        
+
                         if (result.Content == null)
                         {
                             result.Content = "";
@@ -144,7 +167,7 @@ namespace WebCrawlerUI.Services
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                     };
                     var results = JsonSerializer.Deserialize<List<WebData>>(response.Content, options) ?? new List<WebData>();
-                    
+
                     foreach (var result in results)
                     {
                         Console.WriteLine($"Latest Result: Id={result.Id}, Title={result.Title}, Url={result.Url}, Content Length={result.Content?.Length ?? 0}");
@@ -168,5 +191,13 @@ namespace WebCrawlerUI.Services
                 return new List<WebData>();
             }
         }
+    }
+
+    // Helper class to deserialize the API response
+    internal class CrawlResponse
+    {
+        public int TotalArticles { get; set; }
+        public int SuccessfullyIndexed { get; set; }
+        public List<WebData> Articles { get; set; } = new List<WebData>();
     }
 }
