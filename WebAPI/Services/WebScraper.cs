@@ -14,15 +14,13 @@ namespace WebAPI.Services
             {
                 Console.WriteLine($"Starting to scrape URL: {url}");
 
-                // Configure HtmlWeb with additional options to bypass restrictions
                 var web = new HtmlWeb();
                 web.OverrideEncoding = Encoding.UTF8;
                 web.AutoDetectEncoding = true;
                 web.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36";
 
-                // Add additional headers to mimic a real browser
                 web.PreRequest = request => {
-                    request.Timeout = 30000; // 30 seconds timeout
+                    request.Timeout = 30000;
                     request.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
                     request.Headers.Add("Accept-Language", "en-US,en;q=0.9,tr;q=0.8");
                     request.Headers.Add("Cache-Control", "max-age=0");
@@ -38,7 +36,6 @@ namespace WebAPI.Services
                 Console.WriteLine("Loading page...");
                 var doc = web.Load(url);
 
-                // Get and log the raw HTML for debugging
                 string rawHtml = doc.DocumentNode.OuterHtml;
                 Console.WriteLine($"Page loaded successfully. HTML length: {rawHtml.Length}");
 
@@ -55,12 +52,10 @@ namespace WebAPI.Services
                 var articles = new List<WebData>();
                 var timestamp = DateTime.UtcNow;
 
-                // Try alternative method if regular scraping fails with Sozcu
                 if (url.Contains("sozcu.com.tr"))
                 {
                     Console.WriteLine("Using custom extraction for sozcu.com.tr");
 
-                    // Try a simpler approach first - get all of the news cards
                     Console.WriteLine("Looking for news-card elements...");
                     var newsCards = doc.DocumentNode.SelectNodes("//div[contains(@class, 'news-card')]");
                     if (newsCards != null)
@@ -75,14 +70,12 @@ namespace WebAPI.Services
                                 string title = "News Article";
                                 string articleUrl = url;
 
-                                // Directly search for links first
                                 var allLinks = card.SelectNodes(".//a[@href]");
                                 if (allLinks != null)
                                 {
                                     Console.WriteLine($"Found {allLinks.Count} links in card");
                                     foreach (var link in allLinks)
                                     {
-                                        // Print link details for debugging
                                         Console.WriteLine($"Link: {link.OuterHtml}");
 
                                         if (link.Attributes["href"] != null)
@@ -103,7 +96,6 @@ namespace WebAPI.Services
                                     }
                                 }
 
-                                // Get any images and their alt text
                                 var images = card.SelectNodes(".//img");
                                 if (images != null)
                                 {
@@ -128,7 +120,6 @@ namespace WebAPI.Services
 
                                 if (contentBuilder.Length > 0 && !string.IsNullOrWhiteSpace(title) && title != "News Article")
                                 {
-                                    // Format the content as expected by the UI (headline|content format)
                                     string formattedContent = $"{title}|{contentBuilder.ToString().Replace(Environment.NewLine, " ")}";
 
                                     articles.Add(new WebData
@@ -152,7 +143,6 @@ namespace WebAPI.Services
                         Console.WriteLine("No news-card elements found");
                     }
 
-                    // Fallback - find all article-like divs
                     if (articles.Count == 0)
                     {
                         Console.WriteLine("No news cards found, trying alternative approach...");
@@ -198,7 +188,6 @@ namespace WebAPI.Services
 
                                     if (contentBuilder.Length > 0 && !string.IsNullOrWhiteSpace(title) && title != "Article")
                                     {
-                                        // Format the content as expected by the UI (headline|content format)
                                         string formattedContent = $"{title}|{contentBuilder.ToString().Replace(Environment.NewLine, " ")}";
 
                                         articles.Add(new WebData
@@ -219,12 +208,10 @@ namespace WebAPI.Services
                         }
                     }
 
-                    // Truly desperate measures
                     if (articles.Count == 0)
                     {
                         Console.WriteLine("Still no articles found, trying last resort methods...");
 
-                        // Get literally all links and images and try to construct articles
                         var allPossibleLinks = doc.DocumentNode.SelectNodes("//a[@href]");
                         if (allPossibleLinks != null)
                         {
@@ -233,12 +220,11 @@ namespace WebAPI.Services
                             {
                                 try
                                 {
-                                    // Only consider links that seem to be news articles
                                     string href = link.Attributes["href"]?.Value?.Trim() ?? "";
                                     if (href.Contains("-p") || href.Contains("/gundem/") || href.Contains("/ekonomi/"))
                                     {
                                         string linkText = link.InnerText.Trim();
-                                        if (linkText.Length > 10) // Reasonable length for a title
+                                        if (linkText.Length > 10)
                                         {
                                             string articleUrl = href;
                                             if (!articleUrl.StartsWith("http"))
@@ -246,7 +232,6 @@ namespace WebAPI.Services
                                                 articleUrl = $"https://www.sozcu.com.tr{articleUrl}";
                                             }
 
-                                            // Format the content as expected by the UI (headline|content format)
                                             string formattedContent = $"{linkText}|{linkText}";
 
                                             articles.Add(new WebData
@@ -269,14 +254,12 @@ namespace WebAPI.Services
                     }
                 }
 
-                // If still no articles found, add a single entry with the page content as fallback
                 if (articles.Count == 0)
                 {
                     Console.WriteLine("No specific articles found, adding page as a single article");
                     var contentBuilder = new StringBuilder();
                     int elementsFound = 0;
 
-                    // Add general page content using standard selectors
                     var metaDescription = doc.DocumentNode.SelectSingleNode("//meta[@name='description']");
                     if (metaDescription != null && metaDescription.Attributes["content"] != null)
                     {
@@ -298,7 +281,6 @@ namespace WebAPI.Services
                         }
                     }
 
-                    // If still no content, just use the page title
                     if (contentBuilder.Length == 0)
                     {
                         contentBuilder.AppendLine(pageTitle);
@@ -307,7 +289,6 @@ namespace WebAPI.Services
 
                     string content = CleanContent(contentBuilder.ToString());
 
-                    // Format the content as expected by the UI (headline|content format)
                     string formattedContent = $"{pageTitle}|{content}";
 
                     articles.Add(new WebData
@@ -321,7 +302,6 @@ namespace WebAPI.Services
                     Console.WriteLine($"Added page as a single article with {elementsFound} elements");
                 }
 
-                // Combine all articles into a single formatted string using "||" as a separator
                 if (articles.Count > 1)
                 {
                     var combinedArticleContents = new StringBuilder();
@@ -334,7 +314,6 @@ namespace WebAPI.Services
                         combinedArticleContents.Append(article.Content);
                     }
 
-                    // Return a single WebData object with all articles combined
                     return new List<WebData>
                     {
                         new WebData
