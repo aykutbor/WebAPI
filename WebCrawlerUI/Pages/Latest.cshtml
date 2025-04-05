@@ -18,7 +18,6 @@
     {
         <div class="row">
             @{
-                // Split the pages into two equal columns for better balance
                 var leftColumnPages = Model.LatestPages.Take(Model.LatestPages.Count / 2).ToList();
                 var rightColumnPages = Model.LatestPages.Skip(Model.LatestPages.Count / 2).ToList();
             }

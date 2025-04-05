@@ -34,8 +34,6 @@ public class IndexModel : PageModel
 
                 _logger.LogInformation($"Search for '{Query}' returned {SearchResults.Count} results");
 
-                // Filter search results to include only those that actually contain the query
-                // in their title, content, or in any of their news items
                 SearchResults = SearchResults.Where(result =>
                     result.Title?.Contains(Query, StringComparison.OrdinalIgnoreCase) == true ||
                     result.Content?.Contains(Query, StringComparison.OrdinalIgnoreCase) == true ||

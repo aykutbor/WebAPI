@@ -45,12 +45,10 @@ namespace WebCrawlerUI.Services
 
                     try
                     {
-                        // First try to parse as a complete response object with Articles array
                         var apiResponse = JsonSerializer.Deserialize<CrawlResponse>(response.Content, options);
 
                         if (apiResponse != null && apiResponse.Articles != null && apiResponse.Articles.Count > 0)
                         {
-                            // Take the first article or combine them if needed
                             var firstArticle = apiResponse.Articles[0];
                             Console.WriteLine($"Successfully parsed API response with {apiResponse.Articles.Count} articles");
 
@@ -59,7 +57,6 @@ namespace WebCrawlerUI.Services
                     }
                     catch (JsonException)
                     {
-                        // If that fails, try to parse as a single WebData object
                         Console.WriteLine("Could not parse as CrawlResponse, trying as WebData");
                         try
                         {
@@ -130,19 +127,15 @@ namespace WebCrawlerUI.Services
                     {
                         Console.WriteLine($"Search Result: Id={result.Id}, Title={result.Title}, Url={result.Url}, Content Length={result.Content?.Length ?? 0}");
 
-                        // Ensure content is not null
                         if (result.Content == null)
                         {
                             result.Content = "";
                         }
 
-                        // Filter the NewsItems collection to only include relevant items
                         if (result.NewsItems != null && result.NewsItems.Any())
                         {
-                            // Keep track of whether we found any relevant news items
                             bool hasRelevantNewsItems = false;
 
-                            // Create a new list with only relevant news items
                             var relevantNewsItems = result.NewsItems
                                 .Where(item =>
                                     (item.Title?.Contains(query, StringComparison.OrdinalIgnoreCase) == true) ||
@@ -151,12 +144,10 @@ namespace WebCrawlerUI.Services
 
                             if (relevantNewsItems.Any())
                             {
-                                // Replace the original list with filtered list
                                 result.NewsItems = relevantNewsItems;
                                 hasRelevantNewsItems = true;
                             }
 
-                            // Log information about relevance
                             Console.WriteLine($"Found {relevantNewsItems.Count} relevant news items out of {result.NewsItems.Count}");
                         }
                     }
@@ -182,7 +173,7 @@ namespace WebCrawlerUI.Services
             try
             {
                 var request = new RestRequest("latest", Method.Get)
-                    .AddQueryParameter("take", take * 2); // Request more items to account for filtering
+                    .AddQueryParameter("take", take * 2); 
                 var response = await _client.ExecuteAsync(request);
                 Console.WriteLine($"Latest Response: Status={response.StatusCode}, Content={response.Content?.Substring(0, Math.Min(100, response.Content?.Length ?? 0))}...");
                 if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
@@ -196,7 +187,6 @@ namespace WebCrawlerUI.Services
 
                     Console.WriteLine($"Got {results.Count} initial results from API");
 
-                    // Group by URL and take the most recent for each URL to avoid duplicates
                     results = results
                         .GroupBy(r => r.Url)
                         .Select(g => g.OrderByDescending(r => r.CrawledAt).First())
@@ -208,7 +198,6 @@ namespace WebCrawlerUI.Services
                     foreach (var result in results)
                     {
                         Console.WriteLine($"Latest Result: Id={result.Id}, Title={result.Title}, Url={result.Url}, Content Length={result.Content?.Length ?? 0}");
-                        // Ensure content is not null
                         if (result.Content == null)
                         {
                             result.Content = "";
@@ -230,7 +219,6 @@ namespace WebCrawlerUI.Services
         }
     }
 
-    // Helper class to deserialize the API response
     internal class CrawlResponse
     {
         public int TotalArticles { get; set; }

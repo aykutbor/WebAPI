@@ -335,7 +335,6 @@ namespace WebAPI.Services
                                                 articleUrl = $"https://www.sozcu.com.tr{articleUrl}";
                                             }
 
-                                            // Gerçek haber içeriðini almak için detay sayfasýný ziyaret et
                                             string articleContent = "";
                                             try
                                             {
@@ -470,7 +469,6 @@ namespace WebAPI.Services
                         }
                         combinedArticleContents.Append(article.Content);
 
-                        // Haber Ýçeriklerini Birleþtirilmiþ WebData'ya Ekle
                         combinedWebData.NewsItems.AddRange(article.NewsItems);
                     }
 
@@ -505,11 +503,8 @@ namespace WebAPI.Services
                 return string.Empty;
 
             string cleaned = content.Trim();
-            // Replace multiple whitespace characters with a single space
             cleaned = Regex.Replace(cleaned, @"\s+", " ");
-            // Remove non-printable characters
             cleaned = Regex.Replace(cleaned, @"[\p{C}]", string.Empty);
-            // Clean up any remaining issues
             cleaned = cleaned.Replace("\t", " ")
                              .Replace("\n", " ")
                              .Replace("\r", " ")
