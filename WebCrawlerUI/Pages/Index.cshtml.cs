@@ -31,8 +31,21 @@ public class IndexModel : PageModel
             try
             {
                 SearchResults = await _apiService.SearchAsync(Query);
-                
+
                 _logger.LogInformation($"Search for '{Query}' returned {SearchResults.Count} results");
+
+                // Filter search results to include only those that actually contain the query
+                // in their title, content, or in any of their news items
+                SearchResults = SearchResults.Where(result =>
+                    result.Title?.Contains(Query, StringComparison.OrdinalIgnoreCase) == true ||
+                    result.Content?.Contains(Query, StringComparison.OrdinalIgnoreCase) == true ||
+                    (result.NewsItems != null && result.NewsItems.Any(item =>
+                        item.Title?.Contains(Query, StringComparison.OrdinalIgnoreCase) == true ||
+                        item.Content?.Contains(Query, StringComparison.OrdinalIgnoreCase) == true))
+                ).ToList();
+
+                _logger.LogInformation($"After filtering, showing {SearchResults.Count} relevant results");
+
                 foreach (var result in SearchResults)
                 {
                     _logger.LogInformation($"Result: Id={result.Id}, Title={result.Title?.Length ?? 0}, Content Length={result.Content?.Length ?? 0}");

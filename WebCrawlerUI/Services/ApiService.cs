@@ -130,11 +130,37 @@ namespace WebCrawlerUI.Services
                     {
                         Console.WriteLine($"Search Result: Id={result.Id}, Title={result.Title}, Url={result.Url}, Content Length={result.Content?.Length ?? 0}");
 
+                        // Ensure content is not null
                         if (result.Content == null)
                         {
                             result.Content = "";
                         }
+
+                        // Filter the NewsItems collection to only include relevant items
+                        if (result.NewsItems != null && result.NewsItems.Any())
+                        {
+                            // Keep track of whether we found any relevant news items
+                            bool hasRelevantNewsItems = false;
+
+                            // Create a new list with only relevant news items
+                            var relevantNewsItems = result.NewsItems
+                                .Where(item =>
+                                    (item.Title?.Contains(query, StringComparison.OrdinalIgnoreCase) == true) ||
+                                    (item.Content?.Contains(query, StringComparison.OrdinalIgnoreCase) == true))
+                                .ToList();
+
+                            if (relevantNewsItems.Any())
+                            {
+                                // Replace the original list with filtered list
+                                result.NewsItems = relevantNewsItems;
+                                hasRelevantNewsItems = true;
+                            }
+
+                            // Log information about relevance
+                            Console.WriteLine($"Found {relevantNewsItems.Count} relevant news items out of {result.NewsItems.Count}");
+                        }
                     }
+
                     return results;
                 }
                 else
@@ -193,7 +219,6 @@ namespace WebCrawlerUI.Services
         }
     }
 
-    // Helper class to deserialize the API response
     internal class CrawlResponse
     {
         public int TotalArticles { get; set; }

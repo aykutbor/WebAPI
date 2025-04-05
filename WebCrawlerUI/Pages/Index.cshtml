@@ -166,11 +166,24 @@
                                 <div class="mt-3">
                                     <h6>İlgili Haberler:</h6>
                                     <div class="list-group">
-                                        @foreach (var newsItem in result.NewsItems)
+                                        @{
+                                            var relevantNewsItems = result.NewsItems.Where(item =>
+                                            item.Title.Contains(Model.Query, StringComparison.OrdinalIgnoreCase) ||
+                                            item.Content.Contains(Model.Query, StringComparison.OrdinalIgnoreCase)).ToList();
+                                        }
+
+                                        @if (relevantNewsItems.Any())
                                         {
-                                            <a href="@newsItem.Url" class="list-group-item list-group-item-action" target="_blank">
-                                                @newsItem.Title
-                                            </a>
+                                            @foreach (var newsItem in relevantNewsItems)
+                                            {
+                                                <a href="@newsItem.Url" class="list-group-item list-group-item-action" target="_blank">
+                                                    @newsItem.Title
+                                                </a>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="alert alert-info">Bu arama için ilgili haber bulunamadı.</div>
                                         }
                                     </div>
                                 </div>
