@@ -46,7 +46,7 @@ namespace WebAPI.Services
                 }
 
                 var titleNode = doc.DocumentNode.SelectSingleNode("//title");
-                string pageTitle = titleNode?.InnerText.Trim() ?? "No Title";
+                string pageTitle = WebUtility.HtmlDecode(titleNode?.InnerText.Trim()) ?? "No Title";
                 Console.WriteLine($"Page title found: {pageTitle}");
 
                 var articles = new List<WebData>();
@@ -87,7 +87,7 @@ namespace WebAPI.Services
                                             }
                                         }
 
-                                        string linkText = link.InnerText.Trim();
+                                        string linkText = WebUtility.HtmlDecode(link.InnerText.Trim());
                                         if (!string.IsNullOrWhiteSpace(linkText) && linkText.Length > 5 && title == "News Article")
                                         {
                                             title = linkText;
@@ -104,7 +104,7 @@ namespace WebAPI.Services
                                     {
                                         if (image.Attributes["alt"] != null)
                                         {
-                                            string altText = image.Attributes["alt"].Value.Trim();
+                                            string altText = WebUtility.HtmlDecode(image.Attributes["alt"].Value.Trim());
                                             if (!string.IsNullOrWhiteSpace(altText))
                                             {
                                                 if (title == "News Article")
@@ -120,7 +120,7 @@ namespace WebAPI.Services
 
                                 if (contentBuilder.Length > 0 && !string.IsNullOrWhiteSpace(title) && title != "News Article")
                                 {
-                                    string formattedContent = $"{title}|{contentBuilder.ToString().Replace(Environment.NewLine, " ")}";
+                                    string formattedContent = $"{title}|{CleanContent(contentBuilder.ToString())}";
 
                                     articles.Add(new WebData
                                     {
@@ -167,7 +167,7 @@ namespace WebAPI.Services
                                             articleUrl = $"https://www.sozcu.com.tr{articleUrl}";
                                         }
 
-                                        string linkText = link.InnerText.Trim();
+                                        string linkText = WebUtility.HtmlDecode(link.InnerText.Trim());
                                         if (!string.IsNullOrWhiteSpace(linkText) && linkText.Length > 5)
                                         {
                                             title = linkText;
@@ -178,7 +178,7 @@ namespace WebAPI.Services
                                     var image = div.SelectSingleNode(".//img");
                                     if (image != null && image.Attributes["alt"] != null)
                                     {
-                                        string altText = image.Attributes["alt"].Value.Trim();
+                                        string altText = WebUtility.HtmlDecode(image.Attributes["alt"].Value.Trim());
                                         if (!string.IsNullOrWhiteSpace(altText))
                                         {
                                             if (title == "Article") title = altText;
@@ -188,7 +188,7 @@ namespace WebAPI.Services
 
                                     if (contentBuilder.Length > 0 && !string.IsNullOrWhiteSpace(title) && title != "Article")
                                     {
-                                        string formattedContent = $"{title}|{contentBuilder.ToString().Replace(Environment.NewLine, " ")}";
+                                        string formattedContent = $"{title}|{CleanContent(contentBuilder.ToString())}";
 
                                         articles.Add(new WebData
                                         {
@@ -223,7 +223,7 @@ namespace WebAPI.Services
                                     string href = link.Attributes["href"]?.Value?.Trim() ?? "";
                                     if (href.Contains("-p") || href.Contains("/gundem/") || href.Contains("/ekonomi/"))
                                     {
-                                        string linkText = link.InnerText.Trim();
+                                        string linkText = WebUtility.HtmlDecode(link.InnerText.Trim());
                                         if (linkText.Length > 10)
                                         {
                                             string articleUrl = href;
@@ -263,7 +263,7 @@ namespace WebAPI.Services
                     var metaDescription = doc.DocumentNode.SelectSingleNode("//meta[@name='description']");
                     if (metaDescription != null && metaDescription.Attributes["content"] != null)
                     {
-                        contentBuilder.AppendLine(metaDescription.Attributes["content"].Value);
+                        contentBuilder.AppendLine(WebUtility.HtmlDecode(metaDescription.Attributes["content"].Value));
                         elementsFound++;
                     }
 
@@ -272,7 +272,7 @@ namespace WebAPI.Services
                     {
                         foreach (var p in paragraphs)
                         {
-                            string text = p.InnerText.Trim();
+                            string text = WebUtility.HtmlDecode(p.InnerText.Trim());
                             if (text.Length > 10)
                             {
                                 contentBuilder.AppendLine(text);
@@ -349,7 +349,7 @@ namespace WebAPI.Services
 
         private string CleanContent(string content)
         {
-            string cleaned = content.Trim();
+            string cleaned = WebUtility.HtmlDecode(content.Trim());
             cleaned = Regex.Replace(cleaned, @"\s+", " ");
             cleaned = Regex.Replace(cleaned, @"[\p{C}]", string.Empty);
             return cleaned;

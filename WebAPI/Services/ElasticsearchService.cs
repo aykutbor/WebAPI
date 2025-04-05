@@ -11,9 +11,9 @@ namespace WebAPI.Services
         {
             var settings = new ConnectionSettings(new Uri(elasticsearchUrl))
                 .DefaultIndex("webdata");
-            
+
             _client = new ElasticClient(settings);
-            
+
             if (!_client.Indices.Exists("webdata").Exists)
             {
                 var createIndexResponse = _client.Indices.Create("webdata", c => c
@@ -66,4 +66,4 @@ namespace WebAPI.Services
             return response.Documents;
         }
     }
-} 
+}
