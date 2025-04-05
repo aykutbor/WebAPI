@@ -182,7 +182,7 @@ namespace WebCrawlerUI.Services
             try
             {
                 var request = new RestRequest("latest", Method.Get)
-                    .AddQueryParameter("take", take.ToString());
+                    .AddQueryParameter("take", take * 2); // Request more items to account for filtering
                 var response = await _client.ExecuteAsync(request);
                 Console.WriteLine($"Latest Response: Status={response.StatusCode}, Content={response.Content?.Substring(0, Math.Min(100, response.Content?.Length ?? 0))}...");
                 if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
@@ -193,6 +193,17 @@ namespace WebCrawlerUI.Services
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                     };
                     var results = JsonSerializer.Deserialize<List<WebData>>(response.Content, options) ?? new List<WebData>();
+
+                    Console.WriteLine($"Got {results.Count} initial results from API");
+
+                    // Group by URL and take the most recent for each URL to avoid duplicates
+                    results = results
+                        .GroupBy(r => r.Url)
+                        .Select(g => g.OrderByDescending(r => r.CrawledAt).First())
+                        .Take(take)
+                        .ToList();
+
+                    Console.WriteLine($"After filtering duplicates, returning {results.Count} results");
 
                     foreach (var result in results)
                     {
@@ -219,6 +230,7 @@ namespace WebCrawlerUI.Services
         }
     }
 
+    // Helper class to deserialize the API response
     internal class CrawlResponse
     {
         public int TotalArticles { get; set; }

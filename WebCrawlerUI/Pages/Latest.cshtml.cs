@@ -24,7 +24,14 @@ namespace WebCrawlerUI.Pages
             try
             {
                 _logger.LogInformation("Retrieving latest pages...");
-                LatestPages = await _apiService.GetLatestAsync();
+                LatestPages = await _apiService.GetLatestAsync(20);
+
+                LatestPages = LatestPages
+                    .GroupBy(p => p.Title)
+                    .Select(g => g.First())
+                    .Take(10)
+                    .ToList();
+
                 _logger.LogInformation($"Retrieved {LatestPages.Count} latest pages");
                 foreach (var page in LatestPages)
                 {
