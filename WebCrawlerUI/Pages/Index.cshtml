@@ -84,8 +84,15 @@
 
                                 <div class="mb-4 p-4 border rounded bg-light">
                                     <h5 class="text-primary font-weight-bold" style="font-size: 1.25rem;">@shortHeadline</h5>
-                                    <p class="text-muted" style="font-size: 1rem; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap;">@shortContent</p>
-                                    <a href="@item.Url" class="btn btn-info btn-sm" target="_blank">Read more</a>
+                                    @if (!string.IsNullOrWhiteSpace(item.Content) && item.Content != item.Title)
+                                    {
+                                        <p class="text-muted" style="font-size: 1rem; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap;">@shortContent</p>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted fst-italic">Haber içeriğini görmek için tıklayın</p>
+                                    }
+                                    <a href="@item.Url" class="btn btn-info btn-sm" target="_blank">Habere Git</a>
                                 </div>
                             }
                         }
@@ -117,8 +124,15 @@
 
                                     <div class="mb-4 p-4 border rounded bg-light">
                                         <h5 class="text-primary font-weight-bold" style="font-size: 1.25rem;">@shortHeadline</h5>
-                                        <p class="text-muted" style="font-size: 1rem; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap;">@shortContent</p>
-                                        <a href="@Model.CrawledData.Url" class="btn btn-info btn-sm" target="_blank">Read more</a>
+                                        @if (!string.IsNullOrWhiteSpace(content) && content != headline)
+                                        {
+                                            <p class="text-muted" style="font-size: 1rem; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap;">@shortContent</p>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-muted fst-italic">Haber içeriğini görmek için tıklayın</p>
+                                        }
+                                        <a href="@Model.CrawledData.Url" class="btn btn-info btn-sm" target="_blank">Habere Git</a>
                                     </div>
                                 }
                             }

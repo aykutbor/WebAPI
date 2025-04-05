@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using WebAPI.Models;
 using System.Net;
+using System.Linq;
 
 namespace WebAPI.Services
 {
@@ -120,7 +121,49 @@ namespace WebAPI.Services
 
                                 if (contentBuilder.Length > 0 && !string.IsNullOrWhiteSpace(title) && title != "News Article")
                                 {
-                                    string formattedContent = $"{title}|{contentBuilder.ToString().Replace(Environment.NewLine, " ")}";
+                                    string cleanContent = contentBuilder.ToString().Replace(Environment.NewLine, " ");
+
+                                    string contentWithoutTitle = cleanContent.Replace(title, "").Trim();
+                                    if (string.IsNullOrWhiteSpace(contentWithoutTitle))
+                                    {
+                                        try
+                                        {
+                                            var articleWeb = new HtmlWeb();
+                                            articleWeb.OverrideEncoding = Encoding.UTF8;
+                                            articleWeb.AutoDetectEncoding = true;
+                                            articleWeb.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36";
+
+                                            var articleDoc = articleWeb.Load(articleUrl);
+                                            var contentParagraphs = articleDoc.DocumentNode.SelectNodes("//p") ?? new HtmlAgilityPack.HtmlNodeCollection(null);
+
+                                            var articleContentBuilder = new StringBuilder();
+                                            foreach (var p in contentParagraphs.Take(3))
+                                            {
+                                                string pText = WebUtility.HtmlDecode(p.InnerText.Trim());
+                                                if (!string.IsNullOrWhiteSpace(pText) && pText.Length > 20)
+                                                {
+                                                    articleContentBuilder.AppendLine(pText);
+                                                }
+                                            }
+
+                                            if (articleContentBuilder.Length > 0)
+                                            {
+                                                cleanContent = articleContentBuilder.ToString().Replace(Environment.NewLine, " ");
+                                                Console.WriteLine($"Retrieved actual content for: {title}");
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Console.WriteLine($"Failed to retrieve article content: {ex.Message}");
+                                            cleanContent = title;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        cleanContent = contentWithoutTitle;
+                                    }
+
+                                    string formattedContent = $"{title}|{cleanContent}";
 
                                     var webData = new WebData
                                     {
@@ -133,7 +176,7 @@ namespace WebAPI.Services
                                     webData.NewsItems.Add(new NewsItem
                                     {
                                         Title = title,
-                                        Content = contentBuilder.ToString().Replace(Environment.NewLine, " "),
+                                        Content = cleanContent,
                                         Url = articleUrl
                                     });
 
@@ -197,7 +240,49 @@ namespace WebAPI.Services
 
                                     if (contentBuilder.Length > 0 && !string.IsNullOrWhiteSpace(title) && title != "Article")
                                     {
-                                        string formattedContent = $"{title}|{contentBuilder.ToString().Replace(Environment.NewLine, " ")}";
+                                        string cleanContent = contentBuilder.ToString().Replace(Environment.NewLine, " ");
+
+                                        string contentWithoutTitle = cleanContent.Replace(title, "").Trim();
+                                        if (string.IsNullOrWhiteSpace(contentWithoutTitle))
+                                        {
+                                            try
+                                            {
+                                                var articleWeb = new HtmlWeb();
+                                                articleWeb.OverrideEncoding = Encoding.UTF8;
+                                                articleWeb.AutoDetectEncoding = true;
+                                                articleWeb.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36";
+
+                                                var articleDoc = articleWeb.Load(articleUrl);
+                                                var contentParagraphs = articleDoc.DocumentNode.SelectNodes("//p") ?? new HtmlAgilityPack.HtmlNodeCollection(null);
+
+                                                var articleContentBuilder = new StringBuilder();
+                                                foreach (var p in contentParagraphs.Take(3))
+                                                {
+                                                    string pText = WebUtility.HtmlDecode(p.InnerText.Trim());
+                                                    if (!string.IsNullOrWhiteSpace(pText) && pText.Length > 20)
+                                                    {
+                                                        articleContentBuilder.AppendLine(pText);
+                                                    }
+                                                }
+
+                                                if (articleContentBuilder.Length > 0)
+                                                {
+                                                    cleanContent = articleContentBuilder.ToString().Replace(Environment.NewLine, " ");
+                                                    Console.WriteLine($"Retrieved actual content for: {title}");
+                                                }
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                Console.WriteLine($"Failed to retrieve article content: {ex.Message}");
+                                                cleanContent = title;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            cleanContent = contentWithoutTitle;
+                                        }
+
+                                        string formattedContent = $"{title}|{cleanContent}";
 
                                         var webData = new WebData
                                         {
@@ -210,7 +295,7 @@ namespace WebAPI.Services
                                         webData.NewsItems.Add(new NewsItem
                                         {
                                             Title = title,
-                                            Content = contentBuilder.ToString().Replace(Environment.NewLine, " "),
+                                            Content = cleanContent,
                                             Url = articleUrl
                                         });
 
@@ -250,7 +335,45 @@ namespace WebAPI.Services
                                                 articleUrl = $"https://www.sozcu.com.tr{articleUrl}";
                                             }
 
-                                            string formattedContent = $"{linkText}|{linkText}";
+                                            // Gerçek haber içeriðini almak için detay sayfasýný ziyaret et
+                                            string articleContent = "";
+                                            try
+                                            {
+                                                var articleWeb = new HtmlWeb();
+                                                articleWeb.OverrideEncoding = Encoding.UTF8;
+                                                articleWeb.AutoDetectEncoding = true;
+                                                articleWeb.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36";
+
+                                                var articleDoc = articleWeb.Load(articleUrl);
+                                                var contentParagraphs = articleDoc.DocumentNode.SelectNodes("//p") ?? new HtmlAgilityPack.HtmlNodeCollection(null);
+
+                                                var articleContentBuilder = new StringBuilder();
+                                                foreach (var p in contentParagraphs.Take(3)) // Ýlk 3 paragrafý al
+                                                {
+                                                    string pText = WebUtility.HtmlDecode(p.InnerText.Trim());
+                                                    if (!string.IsNullOrWhiteSpace(pText) && pText.Length > 20)
+                                                    {
+                                                        articleContentBuilder.AppendLine(pText);
+                                                    }
+                                                }
+
+                                                if (articleContentBuilder.Length > 0)
+                                                {
+                                                    articleContent = articleContentBuilder.ToString().Replace(Environment.NewLine, " ");
+                                                    Console.WriteLine($"Retrieved actual content for: {linkText}");
+                                                }
+                                                else
+                                                {
+                                                    articleContent = linkText;
+                                                }
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                Console.WriteLine($"Failed to retrieve article content: {ex.Message}");
+                                                articleContent = linkText;
+                                            }
+
+                                            string formattedContent = $"{linkText}|{articleContent}";
 
                                             var webData = new WebData
                                             {
@@ -263,7 +386,7 @@ namespace WebAPI.Services
                                             webData.NewsItems.Add(new NewsItem
                                             {
                                                 Title = linkText,
-                                                Content = linkText,
+                                                Content = articleContent,
                                                 Url = articleUrl
                                             });
 
