@@ -28,6 +28,11 @@ namespace WebCrawlerUI.Pages
 
                 LatestPages = LatestPages
                     .OrderByDescending(p => p.CrawledAt)
+                    .Where(p => !(p.Title.Contains("Sözcü Gazetesi", StringComparison.OrdinalIgnoreCase) &&
+                                  p.Title.Contains("Haberler", StringComparison.OrdinalIgnoreCase) &&
+                                  p.Title.Contains("son dakika haberleri", StringComparison.OrdinalIgnoreCase) &&
+                                  p.Title.Contains("güncel haber", StringComparison.OrdinalIgnoreCase) &&
+                                  p.Title.Contains("köþe yazýlarý", StringComparison.OrdinalIgnoreCase)))
                     .Take(20)
                     .ToList();
 
