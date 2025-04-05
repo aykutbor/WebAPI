@@ -137,7 +137,7 @@ namespace WebAPI.Services
                                             var contentParagraphs = articleDoc.DocumentNode.SelectNodes("//p") ?? new HtmlAgilityPack.HtmlNodeCollection(null);
 
                                             var articleContentBuilder = new StringBuilder();
-                                            foreach (var p in contentParagraphs.Take(3))
+                                            foreach (var p in contentParagraphs.Take(5))
                                             {
                                                 string pText = WebUtility.HtmlDecode(p.InnerText.Trim());
                                                 if (!string.IsNullOrWhiteSpace(pText) && pText.Length > 20)
@@ -176,7 +176,7 @@ namespace WebAPI.Services
                                     webData.NewsItems.Add(new NewsItem
                                     {
                                         Title = title,
-                                        Content = cleanContent,
+                                        Content = CleanContent(cleanContent),
                                         Url = articleUrl
                                     });
 
@@ -256,7 +256,7 @@ namespace WebAPI.Services
                                                 var contentParagraphs = articleDoc.DocumentNode.SelectNodes("//p") ?? new HtmlAgilityPack.HtmlNodeCollection(null);
 
                                                 var articleContentBuilder = new StringBuilder();
-                                                foreach (var p in contentParagraphs.Take(3))
+                                                foreach (var p in contentParagraphs.Take(5))
                                                 {
                                                     string pText = WebUtility.HtmlDecode(p.InnerText.Trim());
                                                     if (!string.IsNullOrWhiteSpace(pText) && pText.Length > 20)
@@ -295,7 +295,7 @@ namespace WebAPI.Services
                                         webData.NewsItems.Add(new NewsItem
                                         {
                                             Title = title,
-                                            Content = cleanContent,
+                                            Content = CleanContent(cleanContent),
                                             Url = articleUrl
                                         });
 
@@ -348,7 +348,7 @@ namespace WebAPI.Services
                                                 var contentParagraphs = articleDoc.DocumentNode.SelectNodes("//p") ?? new HtmlAgilityPack.HtmlNodeCollection(null);
 
                                                 var articleContentBuilder = new StringBuilder();
-                                                foreach (var p in contentParagraphs.Take(3)) // Ýlk 3 paragrafý al
+                                                foreach (var p in contentParagraphs.Take(5))
                                                 {
                                                     string pText = WebUtility.HtmlDecode(p.InnerText.Trim());
                                                     if (!string.IsNullOrWhiteSpace(pText) && pText.Length > 20)
@@ -386,7 +386,7 @@ namespace WebAPI.Services
                                             webData.NewsItems.Add(new NewsItem
                                             {
                                                 Title = linkText,
-                                                Content = articleContent,
+                                                Content = CleanContent(articleContent),
                                                 Url = articleUrl
                                             });
 
@@ -470,7 +470,7 @@ namespace WebAPI.Services
                         }
                         combinedArticleContents.Append(article.Content);
 
-                        // Haber öðelerini birleþtirilmiþ WebData'ya ekle
+                        // Haber Ýçeriklerini Birleþtirilmiþ WebData'ya Ekle
                         combinedWebData.NewsItems.AddRange(article.NewsItems);
                     }
 
@@ -501,9 +501,20 @@ namespace WebAPI.Services
 
         private string CleanContent(string content)
         {
+            if (string.IsNullOrEmpty(content))
+                return string.Empty;
+
             string cleaned = content.Trim();
+            // Replace multiple whitespace characters with a single space
             cleaned = Regex.Replace(cleaned, @"\s+", " ");
+            // Remove non-printable characters
             cleaned = Regex.Replace(cleaned, @"[\p{C}]", string.Empty);
+            // Clean up any remaining issues
+            cleaned = cleaned.Replace("\t", " ")
+                             .Replace("\n", " ")
+                             .Replace("\r", " ")
+                             .Replace("  ", " ")
+                             .Trim();
             return cleaned;
         }
     }

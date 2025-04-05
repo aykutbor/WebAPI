@@ -24,18 +24,44 @@ namespace WebCrawlerUI.Pages
             try
             {
                 _logger.LogInformation("Retrieving latest pages...");
-                LatestPages = await _apiService.GetLatestAsync(20);
+                LatestPages = await _apiService.GetLatestAsync(50);
 
                 LatestPages = LatestPages
-                    .GroupBy(p => p.Title)
-                    .Select(g => g.First())
-                    .Take(10)
+                    .OrderByDescending(p => p.CrawledAt)
+                    .Take(20)
                     .ToList();
+
+                foreach (var page in LatestPages)
+                {
+                    if (page.NewsItems != null && page.NewsItems.Any())
+                    {
+                        var importantItems = page.NewsItems
+                            .Where(n => !string.IsNullOrWhiteSpace(n.Content) && n.Content.Length > 100)
+                            .OrderByDescending(n => n.Content?.Length ?? 0)
+                            .Take(10);
+
+                        var randomItems = page.NewsItems
+                            .OrderBy(x => Guid.NewGuid())
+                            .Take(10);
+
+                        page.NewsItems = importantItems.Union(randomItems)
+                            .OrderByDescending(n => n.Content?.Length ?? 0)
+                            .ToList();
+
+                        foreach (var item in page.NewsItems)
+                        {
+                            if (!string.IsNullOrEmpty(item.Content))
+                            {
+                                item.Content = item.Content.TrimStart();
+                            }
+                        }
+                    }
+                }
 
                 _logger.LogInformation($"Retrieved {LatestPages.Count} latest pages");
                 foreach (var page in LatestPages)
                 {
-                    _logger.LogInformation($"Latest Page: Id={page.Id}, Title={page.Title}, URL={page.Url}, Content Length={page.Content?.Length ?? 0}");
+                    _logger.LogInformation($"Latest Page: Id={page.Id}, Title={page.Title}, URL={page.Url}, Content Length={page.Content?.Length ?? 0}, News Items: {page.NewsItems?.Count ?? 0}");
                 }
                 if (LatestPages.Count == 0)
                 {

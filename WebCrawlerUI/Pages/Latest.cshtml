@@ -4,7 +4,7 @@
     ViewData["Title"] = "Latest Crawled Pages";
 }
 
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <h1 class="mb-4 text-center">Latest Crawled Pages</h1>
 
     @if (!string.IsNullOrEmpty(Model.ErrorMessage))
@@ -17,62 +17,121 @@
     @if (Model.LatestPages.Any())
     {
         <div class="row">
-            @foreach (var item in Model.LatestPages)
-            {
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100">
+            @{
+                // Split the pages into two equal columns for better balance
+                var leftColumnPages = Model.LatestPages.Take(Model.LatestPages.Count / 2).ToList();
+                var rightColumnPages = Model.LatestPages.Skip(Model.LatestPages.Count / 2).ToList();
+            }
+
+            <div class="col-md-6">
+                @foreach (var item in leftColumnPages)
+                {
+                    <div class="card mb-4">
                         <div class="card-header bg-primary text-white">
                             <h5 class="mb-0">@item.Title</h5>
                         </div>
-                        <div class="card-body">
-                            <h6 class="card-subtitle mb-2 text-muted">
-                                <a href="@item.Url" target="_blank">@item.Url</a>
-                            </h6>
-
+                        <div class="card-body p-0">
                             @if (item.NewsItems != null && item.NewsItems.Any())
                             {
-                                <div class="mt-3">
-                                    <h6>Haberler (@item.NewsItems.Count):</h6>
-                                    <div class="list-group">
-                                        @foreach (var newsItem in item.NewsItems.Take(3)) // Show only first 3 news items
-                                        {
-                                            <a href="@newsItem.Url" class="list-group-item list-group-item-action" target="_blank">
-                                                @newsItem.Title
-                                            </a>
-                                        }
-                                        @if (item.NewsItems.Count > 3)
-                                        {
-                                            <div class="list-group-item text-center text-muted">
-                                                Ve @(item.NewsItems.Count - 3) haber daha...
+                                <div class="list-group list-group-flush">
+                                    @foreach (var newsItem in item.NewsItems.Take(5))
+                                    {
+                                        <div class="list-group-item">
+                                            <h6 class="mb-1 text-primary fw-bold">@newsItem.Title</h6>
+                                            @if (!string.IsNullOrWhiteSpace(newsItem.Content) && newsItem.Content != newsItem.Title)
+                                            {
+                                                <div class="news-content mt-2" style="white-space: pre-wrap; word-break: break-word; max-height: 150px; overflow-y: auto; font-size: 0.9rem; background-color: #f8f9fa; padding: 10px; border-radius: 4px; border-left: 3px solid #6c757d;">@(newsItem.Content.Length > 400 ? newsItem.Content.Substring(0, 400) + "..." : newsItem.Content)</div>
+                                            }
+                                            <div class="d-flex justify-content-end mt-2">
+                                                <a href="@newsItem.Url" class="btn btn-sm btn-outline-primary" target="_blank">Habere Git</a>
                                             </div>
-                                        }
+                                        </div>
+                                    }
+                                    @if (item.NewsItems.Count > 5)
+                                    {
+                                        <div class="list-group-item text-center text-muted">
+                                            Ve @(item.NewsItems.Count - 5) haber daha...
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else if (!string.IsNullOrEmpty(item.Content))
+                            {
+                                <div class="p-3">
+                                    <div style="white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; font-size: 0.9rem;">
+                                        @(item.Content.Length > 350 ? item.Content.Substring(0, 350) + "..." : item.Content)
                                     </div>
                                 </div>
                             }
                             else
                             {
-                                <div class="card-text mt-3">
-                                    @if (string.IsNullOrEmpty(item.Content))
-                                    {
-                                        <span class="text-muted">No content available</span>
-                                    }
-                                    else
-                                    {
-                                        <div style="white-space: pre-wrap; word-break: break-word; max-height: 150px; overflow-y: auto; font-size: 0.9rem;">
-                                            @(item.Content.Length > 250 ? item.Content.Substring(0, 250) + "..." : item.Content)
-                                        </div>
-                                        <span class="badge bg-secondary">@item.Content.Length karakterler</span>
-                                    }
+                                <div class="p-3">
+                                    <span class="text-muted">Ýçerik bulunamadý</span>
                                 </div>
                             }
                         </div>
-                        <div class="card-footer text-muted">
+                        <div class="card-footer text-muted d-flex justify-content-between align-items-center">
                             <span class="badge bg-info text-white">@(item.NewsItems?.Count ?? 0) haberler</span>
-                            <span class="float-end">Crawled on @item.CrawledAt.ToString("yyyy-MM-dd HH:mm:ss")</span>
+                            <span>@item.CrawledAt.ToString("dd.MM.yyyy HH:mm")</span>
                         </div>
                     </div>
-                </div>
-            }
+                }
+            </div>
+
+            <div class="col-md-6">
+                @foreach (var item in rightColumnPages)
+                {
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">@item.Title</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            @if (item.NewsItems != null && item.NewsItems.Any())
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var newsItem in item.NewsItems.Take(5))
+                                    {
+                                        <div class="list-group-item">
+                                            <h6 class="mb-1 text-primary fw-bold">@newsItem.Title</h6>
+                                            @if (!string.IsNullOrWhiteSpace(newsItem.Content) && newsItem.Content != newsItem.Title)
+                                            {
+                                                <div class="news-content mt-2" style="white-space: pre-wrap; word-break: break-word; max-height: 150px; overflow-y: auto; font-size: 0.9rem; background-color: #f8f9fa; padding: 10px; border-radius: 4px; border-left: 3px solid #6c757d;">@(newsItem.Content.Length > 400 ? newsItem.Content.Substring(0, 400) + "..." : newsItem.Content)</div>
+                                            }
+                                            <div class="d-flex justify-content-end mt-2">
+                                                <a href="@newsItem.Url" class="btn btn-sm btn-outline-primary" target="_blank">Habere Git</a>
+                                            </div>
+                                        </div>
+                                    }
+                                    @if (item.NewsItems.Count > 5)
+                                    {
+                                        <div class="list-group-item text-center text-muted">
+                                            Ve @(item.NewsItems.Count - 5) haber daha...
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else if (!string.IsNullOrEmpty(item.Content))
+                            {
+                                <div class="p-3">
+                                    <div style="white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; font-size: 0.9rem;">
+                                        @(item.Content.Length > 350 ? item.Content.Substring(0, 350) + "..." : item.Content)
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="p-3">
+                                    <span class="text-muted">Ýçerik bulunamadý</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer text-muted d-flex justify-content-between align-items-center">
+                            <span class="badge bg-info text-white">@(item.NewsItems?.Count ?? 0) haberler</span>
+                            <span>@item.CrawledAt.ToString("dd.MM.yyyy HH:mm")</span>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
     }
     else if (string.IsNullOrEmpty(Model.ErrorMessage))
@@ -82,9 +141,9 @@
         </div>
     }
 
-    <div class="text-center mt-4">
+    <div class="text-center mt-4 mb-5">
         <a asp-page="/Index" class="btn btn-primary">
-            Back to Home
+            Ana Sayfaya Dön
         </a>
     </div>
 </div>
