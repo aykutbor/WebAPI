@@ -68,24 +68,14 @@
                     }
                     else
                     {
-                        string[] newsItems = Model.CrawledData.Content.Split(new[] { "||" }, StringSplitOptions.RemoveEmptyEntries);
-
-                        if (newsItems.Length == 0)
+                        @if (Model.CrawledData.NewsItems != null && Model.CrawledData.NewsItems.Any())
                         {
-                            <p class="text-muted">No news items found in the content. Please check the content format.</p>
-                        }
-                        else
-                        {
-                            @foreach (var item in newsItems)
+                            @foreach (var item in Model.CrawledData.NewsItems)
                             {
-                                string[] parts = item.Split('|');
-                                string headline = parts.Length > 0 ? parts[0].Trim() : "No Title";
-                                string content = parts.Length > 1 ? parts[1].Trim() : Model.CrawledData.Content;
-
-                                string shortHeadline = headline.Length > 60 ? headline.Substring(0, 60) + "..." : headline;
+                                string shortHeadline = item.Title.Length > 60 ? item.Title.Substring(0, 60) + "..." : item.Title;
 
                                 // İçeriği kelime sınırlarına göre kısaltma
-                                string[] words = content.Split(' ');
+                                string[] words = item.Content.Split(' ');
                                 string shortContent = string.Join(" ", words.Take(30)); // İlk 30 kelimeyi al
                                 if (words.Length > 30)
                                 {
@@ -95,8 +85,42 @@
                                 <div class="mb-4 p-4 border rounded bg-light">
                                     <h5 class="text-primary font-weight-bold" style="font-size: 1.25rem;">@shortHeadline</h5>
                                     <p class="text-muted" style="font-size: 1rem; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap;">@shortContent</p>
-                                    <a href="@Model.CrawledData.Url" class="btn btn-info btn-sm" target="_blank">Read more</a>
+                                    <a href="@item.Url" class="btn btn-info btn-sm" target="_blank">Read more</a>
                                 </div>
+                            }
+                        }
+                        else
+                        {
+                            string[] newsItems = Model.CrawledData.Content.Split(new[] { "||" }, StringSplitOptions.RemoveEmptyEntries);
+
+                            if (newsItems.Length == 0)
+                            {
+                                <p class="text-muted">No news items found in the content. Please check the content format.</p>
+                            }
+                            else
+                            {
+                                @foreach (var item in newsItems)
+                                {
+                                    string[] parts = item.Split('|');
+                                    string headline = parts.Length > 0 ? parts[0].Trim() : "No Title";
+                                    string content = parts.Length > 1 ? parts[1].Trim() : Model.CrawledData.Content;
+
+                                    string shortHeadline = headline.Length > 60 ? headline.Substring(0, 60) + "..." : headline;
+
+                                    // İçeriği kelime sınırlarına göre kısaltma
+                                    string[] words = content.Split(' ');
+                                    string shortContent = string.Join(" ", words.Take(30)); // İlk 30 kelimeyi al
+                                    if (words.Length > 30)
+                                    {
+                                        shortContent += "...";
+                                    }
+
+                                    <div class="mb-4 p-4 border rounded bg-light">
+                                        <h5 class="text-primary font-weight-bold" style="font-size: 1.25rem;">@shortHeadline</h5>
+                                        <p class="text-muted" style="font-size: 1rem; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap;">@shortContent</p>
+                                        <a href="@Model.CrawledData.Url" class="btn btn-info btn-sm" target="_blank">Read more</a>
+                                    </div>
+                                }
                             }
                         }
                     }
@@ -122,14 +146,30 @@
                             <h6 class="card-subtitle mb-2 text-muted">
                                 <a href="@result.Url" target="_blank">@result.Url</a>
                             </h6>
-                            <div class="card-text">
+
+                            @if (result.NewsItems != null && result.NewsItems.Any())
+                            {
+                                <div class="mt-3">
+                                    <h6>İlgili Haberler:</h6>
+                                    <div class="list-group">
+                                        @foreach (var newsItem in result.NewsItems)
+                                        {
+                                            <a href="@newsItem.Url" class="list-group-item list-group-item-action" target="_blank">
+                                                @newsItem.Title
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="card-text mt-3">
                                 @if (string.IsNullOrEmpty(result.Content))
                                 {
                                     <span class="text-muted">No content available</span>
                                 }
                                 else
                                 {
-            <pre style="white-space: pre-wrap; word-break: break-word; max-height: 150px; overflow-y: auto;">@(result.Content.Length > 250 ? result.Content.Substring(0, 250) + "..." : result.Content)</pre>
+                                    <pre style="white-space: pre-wrap; word-break: break-word; max-height: 150px; overflow-y: auto;">@(result.Content.Length > 250 ? result.Content.Substring(0, 250) + "..." : result.Content)</pre>
                                     <span class="badge bg-secondary">@result.Content.Length chars</span>
                                 }
                             </div>

@@ -120,15 +120,24 @@ namespace WebAPI.Services
 
                                 if (contentBuilder.Length > 0 && !string.IsNullOrWhiteSpace(title) && title != "News Article")
                                 {
-                                    string formattedContent = $"{title}|{CleanContent(contentBuilder.ToString())}";
+                                    string formattedContent = $"{title}|{contentBuilder.ToString().Replace(Environment.NewLine, " ")}";
 
-                                    articles.Add(new WebData
+                                    var webData = new WebData
                                     {
-                                        Url = articleUrl,
-                                        Title = title,
+                                        Url = url,
+                                        Title = pageTitle,
                                         Content = formattedContent,
                                         CrawledAt = timestamp
+                                    };
+
+                                    webData.NewsItems.Add(new NewsItem
+                                    {
+                                        Title = title,
+                                        Content = contentBuilder.ToString().Replace(Environment.NewLine, " "),
+                                        Url = articleUrl
                                     });
+
+                                    articles.Add(webData);
                                     Console.WriteLine($"Added article: {title}");
                                 }
                             }
@@ -188,15 +197,24 @@ namespace WebAPI.Services
 
                                     if (contentBuilder.Length > 0 && !string.IsNullOrWhiteSpace(title) && title != "Article")
                                     {
-                                        string formattedContent = $"{title}|{CleanContent(contentBuilder.ToString())}";
+                                        string formattedContent = $"{title}|{contentBuilder.ToString().Replace(Environment.NewLine, " ")}";
 
-                                        articles.Add(new WebData
+                                        var webData = new WebData
                                         {
-                                            Url = articleUrl,
-                                            Title = title,
+                                            Url = url,
+                                            Title = pageTitle,
                                             Content = formattedContent,
                                             CrawledAt = timestamp
+                                        };
+
+                                        webData.NewsItems.Add(new NewsItem
+                                        {
+                                            Title = title,
+                                            Content = contentBuilder.ToString().Replace(Environment.NewLine, " "),
+                                            Url = articleUrl
                                         });
+
+                                        articles.Add(webData);
                                         Console.WriteLine($"Added alternative article: {title}");
                                     }
                                 }
@@ -234,13 +252,22 @@ namespace WebAPI.Services
 
                                             string formattedContent = $"{linkText}|{linkText}";
 
-                                            articles.Add(new WebData
+                                            var webData = new WebData
                                             {
-                                                Url = articleUrl,
-                                                Title = linkText,
+                                                Url = url,
+                                                Title = pageTitle,
                                                 Content = formattedContent,
                                                 CrawledAt = timestamp
+                                            };
+
+                                            webData.NewsItems.Add(new NewsItem
+                                            {
+                                                Title = linkText,
+                                                Content = linkText,
+                                                Url = articleUrl
                                             });
+
+                                            articles.Add(webData);
                                             Console.WriteLine($"Added last resort article: {linkText}");
                                         }
                                     }
@@ -305,6 +332,13 @@ namespace WebAPI.Services
                 if (articles.Count > 1)
                 {
                     var combinedArticleContents = new StringBuilder();
+                    var combinedWebData = new WebData
+                    {
+                        Url = url,
+                        Title = pageTitle,
+                        CrawledAt = timestamp
+                    };
+
                     foreach (var article in articles)
                     {
                         if (combinedArticleContents.Length > 0)
@@ -312,18 +346,13 @@ namespace WebAPI.Services
                             combinedArticleContents.Append("||");
                         }
                         combinedArticleContents.Append(article.Content);
+
+                        // Haber öðelerini birleþtirilmiþ WebData'ya ekle
+                        combinedWebData.NewsItems.AddRange(article.NewsItems);
                     }
 
-                    return new List<WebData>
-                    {
-                        new WebData
-                        {
-                            Url = url,
-                            Title = pageTitle,
-                            Content = combinedArticleContents.ToString(),
-                            CrawledAt = timestamp
-                        }
-                    };
+                    combinedWebData.Content = combinedArticleContents.ToString();
+                    return new List<WebData> { combinedWebData };
                 }
 
                 Console.WriteLine($"Total articles extracted: {articles.Count}");
@@ -349,7 +378,7 @@ namespace WebAPI.Services
 
         private string CleanContent(string content)
         {
-            string cleaned = WebUtility.HtmlDecode(content.Trim());
+            string cleaned = content.Trim();
             cleaned = Regex.Replace(cleaned, @"\s+", " ");
             cleaned = Regex.Replace(cleaned, @"[\p{C}]", string.Empty);
             return cleaned;
