@@ -33,7 +33,7 @@
                             @if (item.NewsItems != null && item.NewsItems.Any())
                             {
                                 <div class="list-group list-group-flush">
-                                    @foreach (var newsItem in item.NewsItems.Take(5))
+                                    @foreach (var newsItem in item.NewsItems.Take(10))
                                     {
                                         <div class="list-group-item">
                                             <h6 class="mb-1 text-primary fw-bold">@newsItem.Title</h6>
@@ -46,10 +46,10 @@
                                             </div>
                                         </div>
                                     }
-                                    @if (item.NewsItems.Count > 5)
+                                    @if (item.NewsItems.Count > 10)
                                     {
                                         <div class="list-group-item text-center text-muted">
-                                            Ve @(item.NewsItems.Count - 5) haber daha...
+                                            Ve @(item.NewsItems.Count - 10) haber daha...
                                         </div>
                                     }
                                 </div>

@@ -6,7 +6,7 @@ namespace WebAPI.Models
         public string Url { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
-        public DateTime CrawledAt { get; set; } = DateTime.UtcNow;
+        public DateTime CrawledAt { get; set; } = DateTime.UtcNow.AddHours(3);
         public List<NewsItem> NewsItems { get; set; } = new List<NewsItem>();
     }
 

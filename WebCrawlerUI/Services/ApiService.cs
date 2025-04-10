@@ -185,7 +185,15 @@ namespace WebCrawlerUI.Services
                     };
                     var results = JsonSerializer.Deserialize<List<WebData>>(response.Content, options) ?? new List<WebData>();
 
-                    foreach (var result in results)
+                    // Filter out duplicate pages by URL
+                    var uniqueResults = results
+                        .GroupBy(r => r.Url)
+                        .Select(g => g.First())
+                        .ToList();
+
+                    Console.WriteLine($"API returned {results.Count} results, filtered to {uniqueResults.Count} unique pages");
+
+                    foreach (var result in uniqueResults)
                     {
                         Console.WriteLine($"Latest Result: Id={result.Id}, Title={result.Title}, Url={result.Url}, Content Length={result.Content?.Length ?? 0}");
                         // Ensure content is not null
@@ -193,8 +201,20 @@ namespace WebCrawlerUI.Services
                         {
                             result.Content = "";
                         }
+
+                        // Also deduplicate news items within each page
+                        if (result.NewsItems?.Any() == true)
+                        {
+                            var uniqueNewsItems = result.NewsItems
+                                .GroupBy(n => n.Title)
+                                .Select(g => g.First())
+                                .ToList();
+
+                            result.NewsItems = uniqueNewsItems;
+                            Console.WriteLine($"Page {result.Title}: Filtered from {result.NewsItems.Count} to {uniqueNewsItems.Count} unique news items");
+                        }
                     }
-                    return results;
+                    return uniqueResults;
                 }
                 else
                 {
