@@ -8,6 +8,8 @@ namespace WebCrawlerUI.Models
         public string Content { get; set; } = string.Empty;
         public DateTime CrawledAt { get; set; }
         public List<NewsItem> NewsItems { get; set; } = new List<NewsItem>();
+
+        public string CrawledAtLocal => CrawledAt.AddHours(3).ToString("dd.MM.yyyy HH:mm");
     }
 
     public class NewsItem

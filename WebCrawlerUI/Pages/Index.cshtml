@@ -59,7 +59,7 @@
             <div class="card-body">
                 <h4>@Model.CrawledData.Title</h4>
                 <p><strong>URL:</strong> <a href="@Model.CrawledData.Url" target="_blank">@Model.CrawledData.Url</a></p>
-                <p><strong>Crawled At:</strong> @Model.CrawledData.CrawledAt.ToString("o")</p>
+                <p><strong>Crawled At:</strong> @Model.CrawledData.CrawledAtLocal</p>
 
                 <div class="mt-3">
                     @if (string.IsNullOrWhiteSpace(Model.CrawledData.Content))
@@ -201,7 +201,7 @@
                                 }
                             </div>
                             <div class="text-muted small">
-                                Crawled on @result.CrawledAt.ToString("yyyy-MM-dd HH:mm:ss")
+                                Crawled on @result.CrawledAtLocal
                             </div>
                         </div>
                     </div>
