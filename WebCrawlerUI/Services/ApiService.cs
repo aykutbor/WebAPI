@@ -173,7 +173,7 @@ namespace WebCrawlerUI.Services
             try
             {
                 var request = new RestRequest("latest", Method.Get)
-                    .AddQueryParameter("take", take * 2); 
+                    .AddQueryParameter("take", take.ToString());
                 var response = await _client.ExecuteAsync(request);
                 Console.WriteLine($"Latest Response: Status={response.StatusCode}, Content={response.Content?.Substring(0, Math.Min(100, response.Content?.Length ?? 0))}...");
                 if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
@@ -185,19 +185,10 @@ namespace WebCrawlerUI.Services
                     };
                     var results = JsonSerializer.Deserialize<List<WebData>>(response.Content, options) ?? new List<WebData>();
 
-                    Console.WriteLine($"Got {results.Count} initial results from API");
-
-                    results = results
-                        .GroupBy(r => r.Url)
-                        .Select(g => g.OrderByDescending(r => r.CrawledAt).First())
-                        .Take(take)
-                        .ToList();
-
-                    Console.WriteLine($"After filtering duplicates, returning {results.Count} results");
-
                     foreach (var result in results)
                     {
                         Console.WriteLine($"Latest Result: Id={result.Id}, Title={result.Title}, Url={result.Url}, Content Length={result.Content?.Length ?? 0}");
+                        // Ensure content is not null
                         if (result.Content == null)
                         {
                             result.Content = "";

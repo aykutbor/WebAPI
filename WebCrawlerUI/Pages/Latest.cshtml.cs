@@ -24,49 +24,11 @@ namespace WebCrawlerUI.Pages
             try
             {
                 _logger.LogInformation("Retrieving latest pages...");
-                LatestPages = await _apiService.GetLatestAsync(50);
-
-                LatestPages = LatestPages
-                    .OrderByDescending(p => p.CrawledAt)
-                    .Where(p => !(p.Title.Contains("Sözcü Gazetesi", StringComparison.OrdinalIgnoreCase) &&
-                                  p.Title.Contains("Haberler", StringComparison.OrdinalIgnoreCase) &&
-                                  p.Title.Contains("son dakika haberleri", StringComparison.OrdinalIgnoreCase) &&
-                                  p.Title.Contains("güncel haber", StringComparison.OrdinalIgnoreCase) &&
-                                  p.Title.Contains("köþe yazýlarý", StringComparison.OrdinalIgnoreCase)))
-                    .Take(20)
-                    .ToList();
-
-                foreach (var page in LatestPages)
-                {
-                    if (page.NewsItems != null && page.NewsItems.Any())
-                    {
-                        var importantItems = page.NewsItems
-                            .Where(n => !string.IsNullOrWhiteSpace(n.Content) && n.Content.Length > 100)
-                            .OrderByDescending(n => n.Content?.Length ?? 0)
-                            .Take(10);
-
-                        var randomItems = page.NewsItems
-                            .OrderBy(x => Guid.NewGuid())
-                            .Take(10);
-
-                        page.NewsItems = importantItems.Union(randomItems)
-                            .OrderByDescending(n => n.Content?.Length ?? 0)
-                            .ToList();
-
-                        foreach (var item in page.NewsItems)
-                        {
-                            if (!string.IsNullOrEmpty(item.Content))
-                            {
-                                item.Content = item.Content.TrimStart();
-                            }
-                        }
-                    }
-                }
-
+                LatestPages = await _apiService.GetLatestAsync();
                 _logger.LogInformation($"Retrieved {LatestPages.Count} latest pages");
                 foreach (var page in LatestPages)
                 {
-                    _logger.LogInformation($"Latest Page: Id={page.Id}, Title={page.Title}, URL={page.Url}, Content Length={page.Content?.Length ?? 0}, News Items: {page.NewsItems?.Count ?? 0}");
+                    _logger.LogInformation($"Latest Page: Id={page.Id}, Title={page.Title}, URL={page.Url}, Content Length={page.Content?.Length ?? 0}");
                 }
                 if (LatestPages.Count == 0)
                 {
