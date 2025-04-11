@@ -185,7 +185,6 @@ namespace WebCrawlerUI.Services
                     };
                     var results = JsonSerializer.Deserialize<List<WebData>>(response.Content, options) ?? new List<WebData>();
 
-                    // Filter out duplicate pages by URL
                     var uniqueResults = results
                         .GroupBy(r => r.Url)
                         .Select(g => g.First())
@@ -196,13 +195,11 @@ namespace WebCrawlerUI.Services
                     foreach (var result in uniqueResults)
                     {
                         Console.WriteLine($"Latest Result: Id={result.Id}, Title={result.Title}, Url={result.Url}, Content Length={result.Content?.Length ?? 0}");
-                        // Ensure content is not null
                         if (result.Content == null)
                         {
                             result.Content = "";
                         }
 
-                        // Also deduplicate news items within each page
                         if (result.NewsItems?.Any() == true)
                         {
                             var uniqueNewsItems = result.NewsItems
